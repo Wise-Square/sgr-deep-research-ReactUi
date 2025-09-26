@@ -1,0 +1,61 @@
+/* Темная тема - Discord */
+#root {
+  background-color: #424549;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #424549;
+}
+
+:root {
+  color: #ffffff;
+  background-color: #424549;
+}
+
+.top-rect {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  background: #323339;
+  padding: 15px;
+}
+
+.bottom-rect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 350px;
+  height: calc(100vh - 80px);
+  background: #2c2d32;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.bottom-rect li {
+  width: 100%;
+  text-align: center;
+  margin: 5px 0;
+  padding: 10px;
+  background: #40444b;
+  border-radius: 5px;
+  list-style: none;
+  color: #ffffff;
+}
+
+.chat-container {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  background: #40444b;
+  border-radius: 10px;
+  padding: 20px;
+  color: #ffffff;
+  overflow-y: auto;
+}

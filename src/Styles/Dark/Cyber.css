@@ -1,0 +1,67 @@
+/* Темная тема - Cyber */
+#root {
+  background-color: #0a0a0a;
+  position: relative;
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #0a0a0a;
+}
+
+:root {
+  color: #00ff88;
+  background-color: #0a0a0a;
+}
+
+.top-rect {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  background: #1a1a1a;
+  padding: 10px;
+}
+
+.bottom-rect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 350px;
+  height: calc(100vh - 80px);
+  background: #111111;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.bottom-rect li {
+  width: 100%;
+  text-align: center;
+  margin: 5px 0;
+  padding: 10px;
+  background: #1a1a1a;
+  border-radius: 5px;
+  list-style: none;
+  color: #00ff88;
+  border: 1px solid #00ff88;
+}
+
+.chat-container {
+  position: absolute;
+  top: 80px;
+  left: 370px;
+  right: 20px;
+  bottom: 20px;
+  background: #111111;
+  border: 2px solid #00ff88;
+  border-radius: 10px;
+  padding: 20px;
+  color: #00ff88;
+  box-sizing: border-box;
+  z-index: 10;
+  overflow-y: auto;
+}
