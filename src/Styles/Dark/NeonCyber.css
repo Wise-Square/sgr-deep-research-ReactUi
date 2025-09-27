@@ -1,0 +1,230 @@
+/* Современная неоновая кибер-тема */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для неоновой темы */
+  --bg-gradient: linear-gradient(135deg, #0c0c0c 0%, #1a0033 50%, #000000 100%);
+  --text-primary: #00ff88;
+  --text-secondary: #00ff88;
+  --text-muted: #00ff88;
+  --text-light: #a0aec0;
+  --bg-primary: rgba(0, 0, 0, 0.8);
+  --bg-secondary: rgba(0, 0, 0, 0.7);
+  --bg-tertiary: rgba(0, 0, 0, 0.6);
+  --bg-overlay: rgba(0, 0, 0, 0.3);
+  --border-color: #00ff88;
+  --border-light: #00ff88;
+  --border-primary: #00ff88;
+  --shadow-sm: 0 0 30px rgba(0, 255, 136, 0.3);
+  --shadow-md: 0 0 30px rgba(0, 255, 136, 0.3);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 0 40px rgba(0, 255, 136, 0.2);
+  --primary-color: #00ff88;
+  --primary-hover: #00cc6a;
+  --secondary-color: #00ff88;
+  --danger-color: #ff0064;
+  --danger-hover: #e6005a;
+  --shadow-primary: 0 0 20px rgba(0, 255, 136, 0.3);
+  --shadow-primary-hover: 0 8px 25px rgba(0, 255, 136, 0.6);
+}
+
+#root {
+  background: var(--bg-gradient);
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+/* Специфичные стили для неоновой темы */
+
+.top-rect {
+  border-bottom: 2px solid #00ff88;
+}
+
+.bottom-rect {
+  border: 2px solid #00ff88;
+}
+
+.bottom-rect li {
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  position: relative;
+  overflow: hidden;
+}
+
+.bottom-rect li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.bottom-rect li:hover::before {
+  left: 100%;
+}
+
+.bottom-rect li:hover {
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.chat-container {
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+}
+
+.message-item.question {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: #00ff88;
+}
+
+.modern-dropdown-item {
+  color: #00ff88;
+}
+
+.modern-dropdown-item:hover {
+  background: rgba(0, 255, 136, 0.2);
+}
+
+.chat-input-section {
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 40px rgba(0, 255, 136, 0.3);
+}
+
+.history-item:hover {
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+/* Специальные анимации для неоновой темы */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.6);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.bottom-rect li:nth-child(odd) {
+  animation: neonPulse 4s ease-in-out infinite;
+}
+
+.btn:hover {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Неоновый скроллбар */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #00ff88 0%, #00ff88 100%);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+}
+
+/* Специальные эффекты для неоновой темы */
+.btn {
+  border: 2px solid #00ff88;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn-primary {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+}
+
+.btn-primary:hover {
+  background: rgba(0, 255, 136, 0.2);
+}
+
+.btn-danger {
+  background: rgba(255, 0, 100, 0.1);
+  color: #ff0064;
+  border: 2px solid #ff0064;
+  box-shadow: 0 0 20px rgba(255, 0, 100, 0.3);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 0, 100, 0.2);
+}
+
+.form-control {
+  border: 2px solid #00ff88;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+.form-control:focus {
+  border-color: #00ff88;
+  box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.form-control::placeholder {
+  color: #00ff88;
+  opacity: 0.6;
+}
+
+.input-group-text {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}

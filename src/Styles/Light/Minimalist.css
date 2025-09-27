@@ -1,0 +1,100 @@
+/* Минималистичная современная тема */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для минималистичной темы */
+  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-light: #a0aec0;
+  --bg-primary: rgba(255, 255, 255, 0.8);
+  --bg-secondary: rgba(255, 255, 255, 0.6);
+  --bg-tertiary: rgba(255, 255, 255, 0.4);
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-light: rgba(0, 0, 0, 0.05);
+  --border-primary: rgba(26, 32, 44, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --primary-color: #1a202c;
+  --primary-hover: #2d3748;
+  --secondary-color: #2d3748;
+  --danger-color: #e53e3e;
+  --danger-hover: #c53030;
+  --shadow-primary: 0 8px 25px rgba(26, 32, 44, 0.3);
+  --shadow-primary-hover: 0 8px 25px rgba(26, 32, 44, 0.3);
+}
+
+#root {
+  background: var(--bg-gradient);
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+/* Специфичные стили для минималистичной темы */
+
+.bottom-rect li {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+
+.bottom-rect li:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow-lg);
+}
+
+.message-item {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border-light);
+}
+
+.message-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-lg);
+}
+
+.message-item.question {
+  background: rgba(26, 32, 44, 0.1);
+  border-color: var(--border-primary);
+}
+
+.message-item.answer {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--border-light);
+}
+
+.status-indicator {
+  background: var(--success-color);
+}
+
+.modern-dropdown-item:hover {
+  background: rgba(26, 32, 44, 0.1);
+  color: var(--primary-color);
+}
+
+/* Минималистичный скроллбар */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-overlay);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}

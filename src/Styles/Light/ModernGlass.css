@@ -1,0 +1,129 @@
+/* Современная стеклянная светлая тема */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для стеклянной темы */
+  --bg-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-light: #a0aec0;
+  --bg-primary: rgba(255, 255, 255, 0.25);
+  --bg-secondary: rgba(255, 255, 255, 0.2);
+  --bg-tertiary: rgba(255, 255, 255, 0.15);
+  --bg-overlay: rgba(255, 255, 255, 0.1);
+  --border-color: rgba(255, 255, 255, 0.3);
+  --border-light: rgba(255, 255, 255, 0.2);
+  --border-primary: rgba(255, 107, 107, 0.3);
+  --shadow-sm: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --primary-color: #ff6b6b;
+  --primary-hover: #ff5252;
+  --secondary-color: #ffa726;
+  --danger-color: #ff4757;
+  --danger-hover: #ff3838;
+  --shadow-primary: 0 6px 20px rgba(255, 107, 107, 0.4);
+  --shadow-primary-hover: 0 8px 25px rgba(255, 107, 107, 0.6);
+}
+
+#root {
+  background: var(--bg-gradient);
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+/* Специфичные стили для стеклянной темы */
+
+.top-rect {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bottom-rect {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bottom-rect li {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+}
+
+.bottom-rect li:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-lg);
+}
+
+.chat-container {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.message-item {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.message-item:hover {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: var(--shadow-lg);
+}
+
+.message-item.question {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: var(--border-primary);
+}
+
+.message-item.answer {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.status-indicator {
+  background: var(--success-color);
+}
+
+.modern-dropdown-item:hover {
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--primary-color);
+}
+
+/* Специальные анимации для стеклянной темы */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.bottom-rect li:nth-child(even) {
+  animation: float 6s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+/* Стеклянный скроллбар */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #ff9800 100%);
+}

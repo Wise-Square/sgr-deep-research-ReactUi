@@ -1,0 +1,173 @@
+/* Фиолетовая дымка - современная темная тема */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для фиолетовой темы */
+  --bg-gradient: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e0;
+  --text-muted: #a0aec0;
+  --text-light: #a0aec0;
+  --bg-primary: rgba(26, 11, 46, 0.9);
+  --bg-secondary: rgba(22, 33, 62, 0.7);
+  --bg-tertiary: rgba(26, 11, 46, 0.6);
+  --bg-overlay: rgba(139, 69, 255, 0.1);
+  --border-color: rgba(139, 69, 255, 0.3);
+  --border-light: rgba(139, 69, 255, 0.2);
+  --border-primary: rgba(139, 69, 255, 0.4);
+  --shadow-sm: 0 4px 20px rgba(139, 69, 255, 0.2);
+  --shadow-md: 0 4px 20px rgba(139, 69, 255, 0.2);
+  --shadow-lg: 0 8px 25px rgba(139, 69, 255, 0.3);
+  --shadow-xl: 0 8px 32px rgba(139, 69, 255, 0.2);
+  --primary-color: #8b45ff;
+  --primary-hover: #9d4edd;
+  --secondary-color: #6b46c1;
+  --danger-color: #ff6b9d;
+  --danger-hover: #c44569;
+  --shadow-primary: 0 4px 15px rgba(139, 69, 255, 0.4);
+  --shadow-primary-hover: 0 8px 25px rgba(139, 69, 255, 0.6);
+}
+
+#root {
+  background: var(--bg-gradient);
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+/* Специфичные стили для фиолетовой темы */
+
+.top-rect::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #8b45ff, transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.bottom-rect li {
+  background: rgba(139, 69, 255, 0.1);
+  border: 1px solid rgba(139, 69, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.bottom-rect li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(139, 69, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.bottom-rect li:hover::before {
+  left: 100%;
+}
+
+.bottom-rect li:hover {
+  background: rgba(139, 69, 255, 0.15);
+  border-color: rgba(139, 69, 255, 0.4);
+}
+
+.message-item.question {
+  background: rgba(139, 69, 255, 0.1);
+  border-color: rgba(139, 69, 255, 0.3);
+}
+
+.modern-dropdown-item:hover {
+  background: rgba(139, 69, 255, 0.2);
+  color: var(--primary-color);
+}
+
+.history-item:hover {
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+/* Специальные анимации для фиолетовой темы */
+@keyframes purpleGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 69, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(139, 69, 255, 0.6);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.bottom-rect li:nth-child(even) {
+  animation: purpleGlow 6s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.bottom-rect li:nth-child(odd) {
+  animation: float 8s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+/* Фиолетовый скроллбар */
+::-webkit-scrollbar-track {
+  background: rgba(139, 69, 255, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8b45ff 0%, #6b46c1 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(139, 69, 255, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #9d4edd 0%, #7c3aed 100%);
+  box-shadow: 0 0 15px rgba(139, 69, 255, 0.5);
+}
+
+/* Специальные эффекты для фиолетовой темы */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.form-control {
+  border: 2px solid rgba(139, 69, 255, 0.3);
+  background: rgba(26, 11, 46, 0.8);
+  color: var(--text-primary);
+  box-shadow: 0 0 15px rgba(139, 69, 255, 0.1);
+}
+
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(139, 69, 255, 0.2);
+  background: rgba(26, 11, 46, 0.9);
+}

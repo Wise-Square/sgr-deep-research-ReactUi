@@ -1,65 +1,76 @@
-/* Светлая тема - Default */
+/* Современная светлая тема - Default */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для светлой темы */
+  --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-light: #a0aec0;
+  --bg-primary: rgba(255, 255, 255, 0.95);
+  --bg-secondary: rgba(255, 255, 255, 0.8);
+  --bg-tertiary: rgba(255, 255, 255, 0.6);
+  --bg-overlay: rgba(0, 0, 0, 0.05);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-light: rgba(0, 0, 0, 0.05);
+  --border-primary: rgba(102, 126, 234, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
 #root {
-  background-color: #ffffff;
-  position: relative;
-  min-height: 100vh;
+  background: var(--bg-gradient);
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background-color: #ffffff;
+  background: var(--bg-gradient);
+  color: var(--text-primary);
 }
 
-:root {
-  color: #000000;
-  background-color: #ffffff;
-}
-
-.top-rect {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  background: #e0e0e0;
-  padding: 10px;
-}
-
-.bottom-rect {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 350px;
-  height: calc(100vh - 80px);
-  background: #f5f5f5;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
+/* Специфичные стили для светлой темы Default */
 
 .bottom-rect li {
-  width: 100%;
-  text-align: center;
-  margin: 5px 0;
-  padding: 10px;
-  background: #ffffff;
-  border-radius: 5px;
-  list-style: none;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
 }
 
-.chat-container {
-  position: absolute;
-  top: 80px;
-  left: 370px;
-  right: 20px;
-  bottom: 20px;
-  background: #f8f9fa;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  padding: 20px;
-  box-sizing: border-box;
-  z-index: 10;
-  color: #000000;
-  overflow-y: auto;
+.bottom-rect li:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Специфичные стили для компонентов */
+
+.message-item {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border-light);
+}
+
+.message-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-lg);
+}
+
+.message-item.question {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: var(--border-primary);
+}
+
+.message-item.answer {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--border-light);
+}
+
+.status-indicator {
+  background: var(--success-color);
+}
+
+.modern-dropdown-item:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: var(--primary-color);
 }

@@ -1,0 +1,308 @@
+/* Темная тема "OLED" с глубоким черным цветом */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для OLED темы */
+  --bg-gradient: linear-gradient(135deg, #000000 0%, #000000 50%, #000000 100%);
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #b0b0b0;
+  --text-light: #808080;
+  --bg-primary: #000000;
+  --bg-secondary: #000000;
+  --bg-tertiary: #000000;
+  --bg-overlay: #000000;
+  --border-color: #ffffff;
+  --border-light: #808080;
+  --border-primary: #ffffff;
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.8);
+  --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.9);
+  --shadow-lg: 0 12px 35px rgba(0, 0, 0, 0.95);
+  --shadow-xl: 0 16px 45px rgba(0, 0, 0, 1);
+  --primary-color: #ffffff;
+  --primary-hover: #e0e0e0;
+  --secondary-color: #b0b0b0;
+  --danger-color: #ff4757;
+  --danger-hover: #ff3838;
+  --success-color: #00ff96;
+  --shadow-primary: 0 0 20px rgba(255, 255, 255, 0.1);
+  --shadow-primary-hover: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+#root {
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(0, 255, 150, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 107, 53, 0.05) 0%, transparent 50%),
+    linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+}
+
+body {
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+/* Специфичные стили для OLED темы */
+
+.top-rect {
+  background: #000000;
+  border-bottom: 2px solid #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.bottom-rect {
+  background: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.9);
+}
+
+.history-item {
+  background: #000000;
+  border: 2px solid #808080;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover {
+  background: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.history-item.active {
+  background: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
+}
+
+.chat-container {
+  background: #000000;
+  border: 2px solid #ffffff;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.9);
+}
+
+.message-item {
+  background: #000000;
+  border: 2px solid #808080;
+  transition: all 0.3s ease;
+}
+
+.message-item:hover {
+  background: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.message-item.question {
+  background: #000000;
+  border-color: #ffffff;
+}
+
+.message-item.answer {
+  background: #000000;
+  border-color: #808080;
+}
+
+.status-indicator {
+  background: var(--success-color);
+  box-shadow: 0 0 15px rgba(0, 255, 150, 0.6);
+  animation: oledPulse 2s ease-in-out infinite;
+}
+
+@keyframes oledPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 255, 150, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 255, 150, 0.8);
+  }
+}
+
+.modern-dropdown-menu {
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(0, 255, 150, 0.2);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95);
+}
+
+.modern-dropdown-item:hover {
+  background: rgba(0, 255, 150, 0.1);
+  color: var(--primary-color);
+}
+
+.btn-primary {
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  color: #000000;
+  box-shadow: var(--shadow-primary);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background: #e0e0e0;
+  border-color: #e0e0e0;
+  box-shadow: var(--shadow-primary-hover);
+  transform: translateY(-2px);
+}
+
+.btn-outline-primary {
+  background: #000000;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.chat-input {
+  background: #000000;
+  border: 2px solid #808080;
+  color: #ffffff;
+}
+
+.chat-input:focus {
+  background: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.form-control {
+  background: #000000;
+  border: 2px solid #808080;
+  color: #ffffff;
+}
+
+.form-control:focus {
+  background: #000000;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+/* Специальные анимации для OLED темы */
+@keyframes oledGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(0, 255, 150, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(0, 255, 150, 0.6);
+  }
+}
+
+@keyframes oledFloat {
+  0%, 100% {
+    transform: translateY(0px);
+    box-shadow: 0 0 10px rgba(0, 255, 150, 0.1);
+  }
+  50% {
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(0, 255, 150, 0.2);
+  }
+}
+
+.history-item:nth-child(even) {
+  animation: oledFloat 6s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.chat-title {
+  animation: oledGlow 3s ease-in-out infinite;
+}
+
+.message-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.message-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 255, 150, 0.1), 
+    transparent);
+  transition: left 0.5s ease;
+}
+
+.message-item:hover::before {
+  left: 100%;
+}
+
+/* OLED скроллбар */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, 
+    rgba(0, 255, 150, 0.6) 0%, 
+    rgba(255, 107, 53, 0.6) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, 
+    rgba(0, 255, 150, 0.8) 0%, 
+    rgba(255, 107, 53, 0.8) 100%);
+  box-shadow: 0 0 10px rgba(0, 255, 150, 0.3);
+}
+
+/* Эффекты свечения для текста */
+.history-item-title,
+.message-title {
+  text-shadow: 0 0 5px rgba(0, 255, 150, 0.2);
+}
+
+.btn-primary {
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .top-rect,
+  .bottom-rect,
+  .chat-container {
+    background: rgba(0, 0, 0, 0.98);
+  }
+  
+  .history-item,
+  .message-item {
+    background: rgba(0, 0, 0, 0.9);
+  }
+}
+
+/* Эффект для пустого состояния */
+.empty-chat {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.empty-icon {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 150, 0.3));
+}
+
+/* Специальные эффекты для кнопок */
+.btn-outline-danger {
+  border-color: rgba(255, 71, 87, 0.3);
+  color: #ff4757;
+}
+
+.btn-outline-danger:hover {
+  background: rgba(255, 71, 87, 0.1);
+  border-color: rgba(255, 71, 87, 0.5);
+  box-shadow: 0 0 15px rgba(255, 71, 87, 0.3);
+}

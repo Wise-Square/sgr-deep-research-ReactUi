@@ -1,66 +1,59 @@
-/* Темная тема - Default */
+/* Современная темная тема - Default */
+@import '../Base.css';
+@import '../Components.css';
+
+:root {
+  /* Переопределение переменных для темной темы */
+  --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e0;
+  --text-muted: #a0aec0;
+  --text-light: #718096;
+  --bg-primary: rgba(26, 26, 46, 0.95);
+  --bg-secondary: rgba(22, 33, 62, 0.8);
+  --bg-tertiary: rgba(26, 26, 46, 0.7);
+  --bg-overlay: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(255, 255, 255, 0.05);
+  --border-primary: rgba(102, 126, 234, 0.3);
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-primary: 0 4px 15px rgba(102, 126, 234, 0.4);
+  --shadow-primary-hover: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
 #root {
-  background-color: #202020;
-  position: relative;
-  min-height: 100vh;
+  background: var(--bg-gradient);
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background-color: #202020;
+  background: var(--bg-gradient);
+  color: var(--text-primary);
 }
 
-:root {
-  color: #ffffff;
-  background-color: #202020;
+/* Специфичные стили для темной темы */
+
+.bottom-rect li:hover {
+  border-color: rgba(102, 126, 234, 0.5);
 }
 
-.top-rect {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  background: #404040;
-  padding: 10px;
+.message-item.question {
+  background: rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.3);
 }
 
-.bottom-rect {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 350px;
-  height: calc(100vh - 80px);
-  background: #2d2d2d;
-  padding: 20px;
-  box-sizing: border-box;
-  overflow-y: auto;
+.modern-dropdown-item:hover {
+  background: rgba(102, 126, 234, 0.2);
+  color: var(--primary-color);
 }
 
-.bottom-rect li {
-  width: 100%;
-  text-align: center;
-  margin: 5px 0;
-  padding: 10px;
-  background: #404040;
-  border-radius: 5px;
-  list-style: none;
-  color: #ffffff;
+.history-item:hover {
+  border-color: rgba(102, 126, 234, 0.3);
 }
 
-.chat-container {
-  position: absolute;
-  top: 80px;
-  left: 370px;
-  right: 20px;
-  bottom: 20px;
-  background: #2d2d2d;
-  border: 2px solid #404040;
-  border-radius: 10px;
-  padding: 20px;
-  color: #ffffff;
-  box-sizing: border-box;
-  z-index: 10;
-  overflow-y: auto;
+/* Темный скроллбар */
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
 }
