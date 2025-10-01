@@ -86,38 +86,7 @@ function App() {
   const [current_lng, setCurrentLng] = useState<Locale>("ru");
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState<boolean>(true);
-  const [chatHistory, setChatHistory] = useState<ChatItem[]>([
-    { 
-      id: 1, 
-      title: "React компоненты", 
-      timestamp: "Сегодня, 14:30", 
-      preview: "Обсуждение лучших практик...",
-      messages: [
-        { id: 1, type: 'question', content: 'Как создать переиспользуемый компонент?', timestamp: '14:30' },
-        { id: 2, type: 'answer', content: 'Для создания переиспользуемого компонента используйте props...', timestamp: '14:31' }
-      ]
-    },
-    { 
-      id: 2, 
-      title: "CSS Grid vs Flexbox", 
-      timestamp: "Вчера, 16:45", 
-      preview: "Сравнение методов верстки...",
-      messages: [
-        { id: 1, type: 'question', content: 'Когда использовать Grid, а когда Flexbox?', timestamp: '16:45' },
-        { id: 2, type: 'answer', content: 'Grid лучше для двумерной верстки, Flexbox для одномерной...', timestamp: '16:46' }
-      ]
-    },
-    { 
-      id: 3, 
-      title: "TypeScript типы", 
-      timestamp: "2 дня назад", 
-      preview: "Изучение продвинутых типов...",
-      messages: [
-        { id: 1, type: 'question', content: 'Как создать сложные типы в TypeScript?', timestamp: '10:20' },
-        { id: 2, type: 'answer', content: 'Используйте union types, intersection types и generics...', timestamp: '10:21' }
-      ]
-    }
-  ]);
+  const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
 
   const applyTheme = (theme: string) => {
     const themeType = theme.includes('/Light/') ? 'Light' : 'Dark';
@@ -172,9 +141,6 @@ function App() {
     setSidebarVisible(!sidebarVisible);
   };
 
-  // Отладочная информация
-  console.log('App rendering with language:', current_lng);
-  console.log('App rendering with theme:', current_theme);
 
   return (
     <div className={`app-container ${!sidebarVisible ? 'sidebar-hidden' : ''}`}>
@@ -218,6 +184,7 @@ function App() {
             ));
           }
         }}
+        setChatHistory={setChatHistory}
         t={t}
         sidebarVisible={sidebarVisible}
       />

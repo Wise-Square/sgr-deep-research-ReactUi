@@ -399,19 +399,29 @@ body {
 /* Адаптивность */
 @media (max-width: 768px) {
   .bottom-rect {
-    width: 100%;
+    width: calc(100% - var(--spacing-sm) * 2);
     margin: var(--spacing-sm);
-    height: auto;
-    max-height: 50vh;
+    height: 360px;
+    position: fixed;
+    top: 120px;
+    left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    z-index: 20;
   }
   
   .chat-container {
     left: var(--spacing-sm);
-    top: 200px;
+    right: var(--spacing-sm);
+    top: 120px;
+    bottom: 80px;
+    position: fixed;
   }
   
   .chat-input-section {
     left: var(--spacing-sm);
+    right: var(--spacing-sm);
+    bottom: var(--spacing-sm);
+    position: fixed;
   }
   
   .app-container.sidebar-hidden .chat-container {
@@ -422,5 +432,41 @@ body {
   .app-container.sidebar-hidden .chat-input-section {
     left: var(--spacing-sm);
     right: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .bottom-rect {
+    width: calc(100% - var(--spacing-xs) * 2);
+    height: 320px;
+    top: 90px;
+    margin: var(--spacing-xs);
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+  }
+  
+  .chat-container {
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+    top: 90px;
+    bottom: 60px;
+    padding: var(--spacing-md);
+  }
+  
+  .chat-input-section {
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+    bottom: var(--spacing-xs);
+    padding: var(--spacing-md);
+  }
+  
+  .app-container.sidebar-hidden .chat-container {
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
+  }
+  
+  .app-container.sidebar-hidden .chat-input-section {
+    left: var(--spacing-xs);
+    right: var(--spacing-xs);
   }
 }

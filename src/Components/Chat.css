@@ -1,0 +1,184 @@
+/* Стили для информации об агенте */
+.agent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.agent-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    font-size: 16px;
+}
+
+.status-indicator.researching {
+    animation: pulse 2s infinite;
+}
+
+
+.status-text {
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.agent-stats {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: #666;
+}
+
+.agent-stats span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.agent-id {
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Стили для отладочной информации */
+.agent-debug-info {
+    margin: 16px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.agent-debug-info details {
+    padding: 12px;
+}
+
+.agent-debug-info summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.agent-debug-info summary:hover {
+    color: #007bff;
+}
+
+.debug-content {
+    margin-top: 12px;
+    padding: 12px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.debug-content p {
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.debug-content strong {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Стили для кнопки остановки */
+.stop-button {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    margin-left: 8px;
+}
+
+.stop-button:hover {
+    background: #c82333;
+    border-color: #bd2130;
+}
+
+.stop-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .agent-info {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    .agent-stats {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .debug-content {
+        padding: 8px;
+        font-size: 12px;
+    }
+}
+
+/* Стили для потокового контента */
+.streaming-message {
+    position: relative;
+}
+
+.streaming-message::after {
+    content: '▋';
+    animation: blink 1s infinite;
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* Улучшенные стили для заголовка чата */
+.chat-header {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 16px 20px;
+    background: white;
+}
+
+.chat-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Стили для состояний агента */
+.status-indicator.inited {
+    color: #6c757d;
+}
+
+.status-indicator.researching {
+    color: #007bff;
+}
+
+
+.status-indicator.completed {
+    color: #28a745;
+}
+
+.status-indicator.failed {
+    color: #dc3545;
+}
