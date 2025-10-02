@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
-
+import { parseMessage } from '../utils/newParser';
 
 type ChatItem = {
   id: number;
@@ -11,7 +11,8 @@ type ChatItem = {
     id: number, 
     type: 'question' | 'answer', 
     content: string, 
-    timestamp: string
+    timestamp: string,
+    questions?: string
   }>;
 };
 
@@ -23,24 +24,24 @@ type ChatProps = {
   sidebarVisible: boolean;
 };
 
-
 const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory, t, sidebarVisible }) => {
     const [inputMessage, setInputMessage] = useState('');
     const [currentAgentId, setCurrentAgentId] = useState<string | null>(null);
     const lastBotMessageIdRef = useRef<number | null>(null);
+    const savedReportContentRef = useRef<string>('');
 
     // Сбрасываем agent ID при смене чата
     useEffect(() => {
         setCurrentAgentId(null);
         lastBotMessageIdRef.current = null;
+        savedReportContentRef.current = '';
         console.log('🔄 Chat changed, reset agent state');
     }, [currentChat?.id]);
-    
 
     const sendMessage = async () => {
         if (!inputMessage.trim() || !currentChat) return;
         
-        const messageToSend = inputMessage; // Сохраняем сообщение до очистки
+        const messageToSend = inputMessage;
         
         try {
             // Добавляем сообщение пользователя
@@ -58,14 +59,13 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                     : chat
             ));
             
-            setInputMessage(''); // Очищаем поле ввода
-            
+            setInputMessage('');
             
             // Вызываем функцию отправки сообщения ПЕРЕД getMessage
             await onSendMessage(messageToSend);
             
-            const botMessageId = Date.now() + 1; // Создаем ID для ответа бота
-            lastBotMessageIdRef.current = botMessageId; // Сохраняем ID в ref
+            const botMessageId = Date.now() + 1;
+            lastBotMessageIdRef.current = botMessageId;
             console.log('🆔 Created bot message ID:', botMessageId);
             await getMessage(botMessageId, messageToSend);
             
@@ -80,10 +80,9 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
             type: 'answer' as const,
             content: '',
             timestamp: new Date().toLocaleTimeString()
-        }
+        };
 
         setChatHistory(prev => {
-            // Находим актуальный чат в состоянии
             const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
             if (!currentChatInState) {
                 console.error('Current chat not found in state');
@@ -100,7 +99,7 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
         });
 
         const modelToUse = currentAgentId || 'sgr_agent';
-        console.log('🚀 Sending request with model:', modelToUse);
+        console.log('🚀 Sending request with model:', modelToUse, 'botMessageId:', botMessageId);
         
         const request = await fetch('/api/v1/chat/completions', {
             method: 'POST',
@@ -115,245 +114,280 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                 temperature: 0.4
             })
         });
+        
+        console.log('📡 API Response received:', {
+            status: request.status,
+            statusText: request.statusText,
+            hasBody: !!request.body,
+            botMessageId
+        });
+
         if (!request.ok) {
+            console.error('❌ API Request failed:', { status: request.status, statusText: request.statusText, botMessageId });
             throw new Error(`HTTP error! status: ${request.status}`);
         }
-       console.log('🚀 Request sent:', request);
+        
         const reader = request.body?.getReader();
         const decoder = new TextDecoder();
         let fullResponse = '';
+        let lastSnapshotContent = '';
 
         if (reader) {
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split('\n');
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6);
-                        if (data === '[DONE]') break;
-                        
-                        try {
-                            const parsed = JSON.parse(data);
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') break;
                             
-                            // Устанавливаем currentAgentId из ответа сервера
-                            if (parsed.model && parsed.model.startsWith('sgr_agent_')) {
-                                console.log('🆔 Agent ID received:', parsed.model);
-                                setCurrentAgentId(parsed.model);
-                            }
+                            console.log('🔍 Raw SSE data received:', data);
                             
-                            // Обработка обычного контента
-                            if (parsed.choices?.[0]?.delta?.content) {
-                                const deltaContent = parsed.choices[0].delta.content;
+                            try {
+                                const parsed = JSON.parse(data);
+                            
+                                // Устанавливаем currentAgentId из ответа сервера
+                                if (parsed.model && parsed.model.startsWith('sgr_agent_')) {
+                                    console.log('🆔 Agent ID received:', parsed.model);
+                                    setCurrentAgentId(parsed.model);
+                                }
                                 
-                                // Фильтруем системные данные - показываем только читаемый текст
-                                if (!deltaContent.includes('{') && 
-                                    !deltaContent.includes('tool_name_discriminator') &&
-                                    !deltaContent.includes('"tool_name_discriminator"') &&
-                                    deltaContent.trim().length > 0) {
-                                    
+                                // Обработка обычного контента
+                                let snapshotContent = '';
+                                if (parsed.snapshot?.choices?.[0]?.message?.content) {
+                                    snapshotContent = parsed.snapshot.choices[0].message.content;
+                                    lastSnapshotContent = snapshotContent;
+                                }
+
+                                // Обрабатываем delta content если есть
+                                if (parsed.choices?.[0]?.delta?.content) {
+                                    const deltaContent = parsed.choices[0].delta.content;
                                     fullResponse += deltaContent;
-                                    console.log(`📝 Updated content: ${fullResponse.length} chars`);
+                                }
+
+                                // Всегда пытаемся парсить snapshot если он есть
+                                if (snapshotContent) {
+                                    const parseResult = parseMessage(snapshotContent);
+                                    let contentToShow = '';
                                     
-                                    // Обновляем сообщение с накопленным содержимым
-                                    setChatHistory(prev => {
-                                        const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
-                                        if (!currentChatInState) {
-                                            console.error('Chat not found when updating content');
-                                            return prev;
-                                        }
-                                        
-                                        // Ищем последнее сообщение типа 'answer' (более надежно чем по ID)
-                                        const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
-                                        const targetMessage = answerMessages[answerMessages.length - 1];
-                                        
-                                        if (!targetMessage) {
-                                            console.error('No answer message found. Available messages:', currentChatInState.messages.map(m => ({ id: m.id, type: m.type })));
-                                            return prev;
-                                        }
-                                        
-                                        console.log('📝 Updating last answer message', targetMessage.id, 'with', fullResponse.length, 'chars');
-                                        
-                                        return prev.map(chat => 
-                                            chat.id === currentChat?.id 
-                                                ? {
-                                                    ...chat, 
-                                                    messages: chat.messages.map(msg => 
-                                                        msg.id === targetMessage.id 
-                                                            ? { ...msg, content: fullResponse }
-                                                            : msg
-                                                    )
-                                                }
-                                                : chat
-                                        );
-                                    });
-                                }
-                            }
-                            
-                            // НОВОЕ: Обработка tool_calls
-                            if (parsed.choices?.[0]?.delta?.tool_calls) {
-                                const toolCall = parsed.choices[0].delta.tool_calls[0];
-                                console.log('🔧 Tool call received:', toolCall?.function?.name);
-                                
-                                if (toolCall?.function?.name === 'createreporttool') {
-                                    // Создаем отдельное сообщение для отчета
-                                    try {
-                                        const args = JSON.parse(toolCall.function.arguments);
-                                        const reportContent = args.content || '';
-                                        
-                                        if (reportContent && reportContent.trim()) {
-                                            console.log('📋 Creating separate report message:', reportContent.length, 'chars');
-                                            console.log('📋 Report content preview:', reportContent.substring(0, 200) + '...');
+                                    // Проверяем, есть ли Executive Summary в основном тексте
+                                    if (parseResult.mainText.includes('### Executive Summary')) {
+                                        savedReportContentRef.current = parseResult.mainText;
+                                    }
+                                    
+                                    // Если есть сохраненный контент с Executive Summary, используем его
+                                    if (savedReportContentRef.current && !parseResult.mainText.includes('### Executive Summary')) {
+                                        contentToShow = savedReportContentRef.current;
+                                    } else {
+                                        contentToShow = parseResult.mainText;
+                                    }
+                                    
+                                    if (parseResult.spoilerText) {
+                                        contentToShow = `~~{${parseResult.spoilerTitle || 'Мысли'}}~~\n${parseResult.spoilerText}\n\n${contentToShow}`;
+                                    }
+                                    
+                                    if (contentToShow && contentToShow.length > 0) {
+                                        setChatHistory(prev => {
+                                            const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
+                                            if (!currentChatInState) {
+                                                console.error('Chat not found when updating content');
+                                                return prev;
+                                            }
                                             
-                                            const reportMessage = {
-                                                id: Date.now() + 3,
-                                                type: 'answer' as const,
-                                                content: reportContent,
-                                                timestamp: new Date().toLocaleTimeString()
-                                            };
+                                            const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
+                                            const targetMessage = answerMessages[answerMessages.length - 1];
                                             
-                                            setChatHistory(prev => {
-                                                const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
-                                                if (!currentChatInState) {
-                                                    console.error('Chat not found when creating report message');
-                                                    return prev;
-                                                }
-                                                
-                                                console.log('📋 Adding report message to chat with', currentChatInState.messages.length, 'existing messages');
-                                                
-                                                return prev.map(chat => 
-                                                    chat.id === currentChat?.id 
-                                                        ? { ...chat, messages: [...chat.messages, reportMessage] }
-                                                        : chat
-                                                );
+                                            if (!targetMessage) {
+                                                console.error('No answer message found. Available messages:', currentChatInState.messages.map(m => ({ id: m.id, type: m.type })));
+                                                return prev;
+                                            }
+                                            
+                                            console.log('📝 Updating last answer message', targetMessage.id, 'with', contentToShow.length, 'chars');
+                                            console.log('🔄 Content change details:', {
+                                                messageId: targetMessage.id,
+                                                oldContentLength: targetMessage.content.length,
+                                                newContentLength: contentToShow.length,
+                                                oldContentPreview: targetMessage.content.substring(0, 100),
+                                                newContentPreview: contentToShow.substring(0, 100),
+                                                botMessageId: botMessageId
                                             });
-                                        }
-                                    } catch (error) {
-                                        console.error('❌ Error parsing report content:', error);
+                                            
+                                            return prev.map(chat => 
+                                                chat.id === currentChat?.id 
+                                                    ? {
+                                                        ...chat, 
+                                                        messages: chat.messages.map(msg => 
+                                                            msg.id === targetMessage.id 
+                                                                ? { ...msg, content: contentToShow }
+                                                                : msg
+                                                        )
+                                                    }
+                                                    : chat
+                                            );
+                                        });
                                     }
-                                } else if (toolCall?.function?.name === 'agentcompletiontool') {
-                                    // Логируем завершение задачи
-                                    try {
-                                        const args = JSON.parse(toolCall.function.arguments);
-                                        const completionReasoning = args.reasoning || '';
-                                        console.log('✅ Task completion received (streaming):', completionReasoning);
-                                        console.log('✅ NOT overwriting report content - keeping separate messages');
-                                    } catch (error) {
-                                        console.error('❌ Error parsing completion data:', error);
-                                    }
-                                } else {
-                                    // Для других tool calls просто логируем
-                                    console.log('🔧 Other tool call:', toolCall?.function?.name, '- content will be added to current message');
                                 }
-                            }
-                            
-                            // Обрабатываем финальный ответ (когда finish_reason = "stop")
-                            if (parsed.choices?.[0]?.message?.content) {
-                                const finalContent = parsed.choices[0].message.content;
                                 
-                                // Если у нас еще нет содержимого, используем финальный ответ
-                                if (!fullResponse.trim()) {
-                                    fullResponse = finalContent;
-                                    console.log(`🏁 Using final content: ${fullResponse.length} chars`);
-                                    setChatHistory(prev => {
-                                        const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
-                                        if (!currentChatInState) {
-                                            console.error('Chat not found when setting final content');
-                                            return prev;
-                                        }
-                                        
-                                        // Ищем последнее сообщение типа 'answer' (более надежно чем по ID)
-                                        const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
-                                        const targetMessage = answerMessages[answerMessages.length - 1];
-                                        
-                                        if (!targetMessage) {
-                                            console.error('No answer message found for final content. Available messages:', currentChatInState.messages.map(m => ({ id: m.id, type: m.type })));
-                                            return prev;
-                                        }
-                                        
-                                        console.log('🏁 Setting final content for last answer message', targetMessage.id, 'with', fullResponse.length, 'chars');
-                                        
-                                        return prev.map(chat => 
-                                            chat.id === currentChat?.id 
-                                                ? {
-                                                    ...chat, 
-                                                    messages: chat.messages.map(msg => 
-                                                        msg.id === targetMessage.id 
-                                                            ? { ...msg, content: fullResponse }
-                                                            : msg
-                                                    )
-                                                }
-                                                : chat
-                                        );
-                                    });
-                                }
-                            }
-                            
-                            // НОВОЕ: Обработка финального контента из tool_calls (в delta)
-                            if (parsed.choices?.[0]?.delta?.tool_calls) {
-                                const toolCalls = parsed.choices[0].delta.tool_calls;
-                                
-                                for (const toolCall of toolCalls) {
-                                    if (toolCall.function?.name === 'agentcompletiontool') {
-                                        // Только логируем завершение, не перезаписываем контент
+                                // Обработка tool_calls
+                                if (parsed.choices?.[0]?.delta?.tool_calls) {
+                                    const toolCall = parsed.choices[0].delta.tool_calls[0];
+                                    console.log('🔧 Tool call received:', toolCall?.function?.name);
+                                    
+                                    if (toolCall?.function?.name === 'createreporttool') {
+                                        // НЕ создаем отдельное сообщение для отчетов - парсер сам обработает их
+                                        console.log('📋 Report tool call received, will be handled by parser');
+                                    } else if (toolCall?.function?.name === 'agentcompletiontool') {
                                         try {
                                             const args = JSON.parse(toolCall.function.arguments);
                                             const completionReasoning = args.reasoning || '';
-                                            console.log('✅ Task completion received from delta:', completionReasoning);
-                                        console.log('✅ NOT overwriting report content - keeping separate messages');
+                                            console.log('✅ Task completion received (streaming):', completionReasoning);
                                         } catch (error) {
                                             console.error('❌ Error parsing completion data:', error);
                                         }
                                     }
                                 }
-                            }
-                            
-                            // НОВОЕ: Обработка финального контента из message.tool_calls (финальный ответ)
-                            if (parsed.choices?.[0]?.message?.tool_calls) {
-                                const toolCalls = parsed.choices[0].message.tool_calls;
-                                console.log('🔧 Final message tool calls received:', toolCalls.length);
                                 
-                                for (const toolCall of toolCalls) {
-                                    if (toolCall.function?.name === 'agentcompletiontool') {
-                                        // Только логируем завершение, не перезаписываем контент
-                                        try {
-                                            const args = JSON.parse(toolCall.function.arguments);
-                                            const completionReasoning = args.reasoning || '';
-                                            console.log('✅ Task completion received from message:', completionReasoning);
-                                            console.log('✅ NOT overwriting report content - keeping separate messages');
-                                        } catch (error) {
-                                            console.error('❌ Error parsing completion data:', error);
-                                        }
+                                // Обрабатываем финальный ответ
+                                if (parsed.choices?.[0]?.message?.content) {
+                                    const finalContent = parsed.choices[0].message.content;
+                                    
+                                    if (!fullResponse.trim()) {
+                                        fullResponse = finalContent;
+                                        console.log(`🏁 Using final content: ${fullResponse.length} chars`);
+                                        setChatHistory(prev => {
+                                            const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
+                                            if (!currentChatInState) {
+                                                console.error('Chat not found when setting final content');
+                                                return prev;
+                                            }
+                                            
+                                            const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
+                                            const targetMessage = answerMessages[answerMessages.length - 1];
+                                            
+                                            if (!targetMessage) {
+                                                console.error('No answer message found for final content');
+                                                return prev;
+                                            }
+                                            
+                                            return prev.map(chat => 
+                                                chat.id === currentChat?.id 
+                                                    ? {
+                                                        ...chat, 
+                                                        messages: chat.messages.map(msg => 
+                                                            msg.id === targetMessage.id 
+                                                                ? { ...msg, content: fullResponse }
+                                                                : msg
+                                                        )
+                                                    }
+                                                    : chat
+                                            );
+                                        });
                                     }
                                 }
+                            } catch (e) {
+                                // Игнорируем ошибки парсинга отдельных чанков
                             }
-                        } catch (e) {
-                            // Игнорируем ошибки парсинга
                         }
                     }
+                }
+            } catch (error) {
+                console.error('❌ Error during stream processing:', error);
+            } finally {
+                // Финальная обработка JSON после завершения стрима
+                let finalContentForParsing = fullResponse;
+                
+                // Для createreporttool всегда используем lastSnapshotContent (JSON), а не fullResponse (результаты поиска)
+                if (lastSnapshotContent && lastSnapshotContent.startsWith('{')) {
+                    finalContentForParsing = lastSnapshotContent;
+                } else if (lastSnapshotContent && lastSnapshotContent.length > fullResponse.length) {
+                    finalContentForParsing = lastSnapshotContent;
+                }
+                
+                // Парсер сам извлекает questions из JSON
+                const finalParseResult = parseMessage(finalContentForParsing);
+                
+                // Проверяем, есть ли Executive Summary в финальном результате
+                if (finalParseResult.mainText.includes('### Executive Summary')) {
+                    savedReportContentRef.current = finalParseResult.mainText;
+                }
+                
+                // Если есть сохраненный контент с Executive Summary, используем его
+                let finalMainText = finalParseResult.mainText;
+                if (savedReportContentRef.current && !finalParseResult.mainText.includes('### Executive Summary')) {
+                    finalMainText = savedReportContentRef.current;
+                }
+                
+                if (finalParseResult.spoilerText) {
+                    const finalFormattedContent = `~~{${finalParseResult.spoilerTitle || 'Мысли'}}~~\n${finalParseResult.spoilerText}\n\n${finalMainText}`;
+                    
+                    setChatHistory(prev => {
+                        const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
+                        if (!currentChatInState) return prev;
+                        
+                        const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
+                        const targetMessage = answerMessages[answerMessages.length - 1];
+                        
+                        if (!targetMessage) return prev;
+                        
+                        return prev.map(chat => 
+                            chat.id === currentChat?.id 
+                                ? {
+                                    ...chat, 
+                                    messages: chat.messages.map(msg => 
+                                        msg.id === targetMessage.id 
+                                            ? { ...msg, content: finalFormattedContent }
+                                            : msg
+                                    )
+                                }
+                                : chat
+                        );
+                    });
+                } else {
+                    setChatHistory(prev => {
+                        const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
+                        if (!currentChatInState) return prev;
+                        
+                        const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
+                        const targetMessage = answerMessages[answerMessages.length - 1];
+                        
+                        if (!targetMessage) return prev;
+                        
+                        return prev.map(chat => 
+                            chat.id === currentChat?.id 
+                                ? {
+                                    ...chat, 
+                                    messages: chat.messages.map(msg => 
+                                        msg.id === targetMessage.id 
+                                            ? { ...msg, content: finalMainText }
+                                            : msg
+                                    )
+                                }
+                                : chat
+                        );
+                    });
                 }
             }
         }
         
-        console.log(`🎯 Final result: ${fullResponse.length} chars`);
         return fullResponse;
     };
 
-      const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             sendMessage();
         }
     };
 
-
     return (
         <>
             <div className={`chat-container ${!sidebarVisible ? 'expanded' : ''}`}>
                 <div className="chat-header">
-                    <h2 className="chat-title">{currentChat ? currentChat.title : t('select_chat')}</h2>
+                    <h2 className="chat-title">{currentChat?.title || t('select_chat')}</h2>
                 </div>
                 
                 <div className="chat-messages">
@@ -364,7 +398,7 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                             </svg>
                             <p className="empty-text">{t('select_chat_or_create')}</p>
                         </div>
-                    ) : currentChat.messages.length === 0 ? (
+                    ) : currentChat?.messages.length === 0 ? (
                         <div className="empty-chat">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="empty-icon">
                                 <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
@@ -374,16 +408,22 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                         </div>
                     ) : (
                         <>
-                            {/* Отображаем сообщения из currentChat */}
-                            {currentChat.messages.map((message) => (
-                                <MessageBubble
-                                    key={message.id}
-                                    message={message.content}
-                                    timestamp={message.timestamp}
-                                    type={message.type === 'question' ? 'user' : 'assistant'}
-                                />
-                            ))}
-                            
+                            {currentChat?.messages.map((message) => {
+                                const { mainText, spoilerText, spoilerTitle } = message.type === 'answer' 
+                                    ? parseMessage(message.content, message.questions)
+                                    : { mainText: message.content, spoilerText: undefined, spoilerTitle: undefined };
+
+                                return (
+                                    <MessageBubble
+                                        key={message.id}
+                                        message={mainText}
+                                        timestamp={message.timestamp}
+                                        type={message.type === 'question' ? 'user' : 'assistant'}
+                                        spoilerText={spoilerText}
+                                        spoilerTitle={spoilerTitle}
+                                    />
+                                );
+                            })}
                         </>
                     )}
                 </div>
