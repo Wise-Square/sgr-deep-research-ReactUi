@@ -2,24 +2,14 @@ import React from 'react';
 
 type TopBarProps = {
   setTheme?: (theme: string) => void;
-  current_theme?: string;
   onToggleLanguage?: () => void;
   currentLanguage?: string;
   onToggleSidebar?: () => void;
   sidebarVisible?: boolean;
 };
 
-const themes = {Dark: [] as string[], Light: [] as string[]}
-const allFiles = import.meta.glob('/src/Styles/**/*', { eager: false });
-Object.keys(allFiles).forEach(filePath => {
-    if (filePath.includes('/Dark/')) {
-        themes.Dark.push(filePath);
-    } else if (filePath.includes('/Light/')) {
-        themes.Light.push(filePath);
-    }
-});
 
-export const TopBar: React.FC<TopBarProps> = ({ setTheme, current_theme, onToggleLanguage, currentLanguage, onToggleSidebar, sidebarVisible}) => {
+export const TopBar: React.FC<TopBarProps> = ({ setTheme, onToggleLanguage, currentLanguage, onToggleSidebar, sidebarVisible}) => {
   
   return (
     <div className="top-rect">
@@ -72,37 +62,6 @@ export const TopBar: React.FC<TopBarProps> = ({ setTheme, current_theme, onToggl
               <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
             </svg>
           </button>
-        </div>
-        
-        <div className="theme-dropdown">
-          <button 
-            type="button" 
-            className="btn btn-primary dropdown-toggle modern-dropdown" 
-            data-bs-toggle="dropdown" 
-            aria-expanded="false"
-            title="Выбрать тему"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <span className="dropdown-text">Темы</span>
-          </button>
-          <ul className="dropdown-menu modern-dropdown-menu">
-            {themes[current_theme as keyof typeof themes]?.map(theme => (
-              <li key={theme}>
-                <a 
-                  className="dropdown-item modern-dropdown-item" 
-                  href="#" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setTheme?.(theme);
-                  }}
-                >
-                  {theme.split('/').pop()?.replace('.css', '').replace(/([A-Z])/g, ' $1').trim()}
-                </a>
-              </li>
-            ))}
-          </ul>
         </div>
       </div>
     </div>

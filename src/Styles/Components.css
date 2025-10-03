@@ -181,6 +181,15 @@
   font-size: var(--font-size-base);
 }
 
+.chat-input:focus {
+  color: var(--text-primary) !important;
+  background: var(--bg-primary) !important;
+}
+
+.chat-input::placeholder {
+  color: var(--text-muted) !important;
+}
+
 .chat-input:disabled {
   background: var(--bg-tertiary);
   color: var(--text-light);
@@ -259,6 +268,9 @@
 .history-list {
   flex: 1;
   overflow-y: auto;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .history-item {
@@ -273,6 +285,11 @@
   opacity: 1;
   background: var(--bg-secondary);
   border: 1px solid var(--border-light);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .history-item:hover {
@@ -289,6 +306,7 @@
 .history-item-content {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .history-item-header {
@@ -306,6 +324,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .history-item-time {
@@ -579,6 +600,383 @@
 .message-bubble-spoiler-content .message-bubble-text {
   margin: 0;
   color: var(--text-primary);
+}
+
+/* Стили для кнопок выбора модели в истории чатов */
+.model-selection-section {
+  padding: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  margin-bottom: var(--spacing-xs);
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.model-selection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.model-selection-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.model-close-btn {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all var(--transition-normal);
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.model-close-btn:focus {
+  outline: none;
+}
+
+.model-buttons-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.model-button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-align: left;
+  height: 24px;
+  width: calc(33.333% - 3px);
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: var(--text-primary);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+
+.model-button:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  color: var(--primary-color);
+}
+
+.model-button:hover .model-button-text {
+  animation: marquee 3s linear infinite;
+}
+
+.model-button-text {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+  max-width: none;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(0);
+  }
+  70% {
+    transform: translateX(calc(-100% + 80px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.model-button:hover {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  color: var(--primary-color);
+}
+
+.model-button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Стили для отображения текущей модели в заголовке чата */
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.current-model-info {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.model-name {
+  color: var(--primary-color);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  font-family: monospace;
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+}
+
+/* Стили для заблокированного состояния поля ввода */
+.chat-input.disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.chat-input.disabled::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.send-button.disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+  border-color: var(--border-color);
+}
+
+.send-button.disabled:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Стили для состояния "ничего не найдено" */
+.empty-search {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px var(--spacing-xl);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty-search .empty-icon {
+  color: var(--text-light);
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.6;
+}
+
+.empty-search .empty-text {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.empty-search .empty-subtext {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Общие стили для всех полей ввода */
+input[type="text"], input[type="search"], textarea {
+  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
+}
+
+input[type="text"]:focus, input[type="search"]:focus, textarea:focus {
+  color: var(--text-primary) !important;
+  background: var(--bg-primary) !important;
+}
+
+input[type="text"]::placeholder, input[type="search"]::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Стили для модального окна переименования */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.modal-content {
+  background: var(--bg-primary) !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 300px;
+  width: auto;
+  overflow: hidden;
+  border: 1px solid var(--border-light) !important;
+  position: fixed;
+  pointer-events: auto;
+  top: var(--modal-y, 50px);
+  left: var(--modal-x, 50px);
+  opacity: 1 !important;
+  z-index: 1001;
+}
+
+.modal-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary) !important;
+  opacity: 1 !important;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  font-weight: normal;
+  transition: color 0.2s ease;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Arial, sans-serif;
+}
+
+.btn-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 16px;
+  background: var(--bg-primary) !important;
+  opacity: 1 !important;
+}
+
+.form-group {
+  margin-bottom: 0;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary) !important;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+.form-group input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--bg-secondary) !important;
+  opacity: 1 !important;
+}
+
+.modal-footer .btn {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.modal-footer .btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.modal-footer .btn-secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.modal-footer .btn-primary {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.modal-footer .btn-primary:hover {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.modal-footer .btn-primary:disabled {
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+  cursor: not-allowed;
 }
 
 /* Стили для спойлера в сообщениях пользователя */

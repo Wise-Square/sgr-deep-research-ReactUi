@@ -14,6 +14,8 @@ const translates: Translates = {
     // HistoryTab
     chat_history_title: "Chat History",
     new_chat: "New Chat",
+    model_selection: "Model:",
+    create_chat_with_model: "Create chat with model",
     open_chat: "Open Chat",
     delete_chat: "Delete Chat",
     empty_history_title: "Chat history is empty",
@@ -45,6 +47,8 @@ const translates: Translates = {
     // HistoryTab
     chat_history_title: "История чатов",
     new_chat: "Новый чат",
+    model_selection: "Модель:",
+    create_chat_with_model: "Создать чат с моделью",
     open_chat: "Открыть чат",
     delete_chat: "Удалить чат",
     empty_history_title: "История чатов пуста",
@@ -71,7 +75,6 @@ const translates: Translates = {
   },
 };
 
-type Theme = "Dark" | "Light"
 
 type ChatItem = {
   id: number;
@@ -82,16 +85,16 @@ type ChatItem = {
 };
 
 function App() {
-  const [current_theme, setCurrentTheme] = useState<Theme>("Light");
   const [current_lng, setCurrentLng] = useState<Locale>("ru");
   const [currentChatId, setCurrentChatId] = useState<number | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState<boolean>(true);
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [showModelButtons, setShowModelButtons] = useState<boolean>(false);
+  const [editingChatId, setEditingChatId] = useState<number | null>(null);
+  const [newChatTitle, setNewChatTitle] = useState<string>('');
 
   const applyTheme = (theme: string) => {
-    const themeType = theme.includes('/Light/') ? 'Light' : 'Dark';
-    setCurrentTheme(themeType);
-    
     let themeElement = document.getElementById('theme') as HTMLLinkElement;
     if (!themeElement) {
       themeElement = document.createElement('link');
@@ -102,7 +105,32 @@ function App() {
     themeElement.href = theme;
   };
 
-  const addNewChat = () => {
+  const addNewChat = async () => {
+    try {
+      console.log('🔄 Fetching models from server...');
+      const response = await fetch('/v1/models');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const models = await response.json();
+      console.log('📋 Available models:', models);
+      
+      // Сохраняем модели и показываем кнопки выбора
+      setAvailableModels(models.data || []);
+      setShowModelButtons(true);
+      
+    } catch (error) {
+      console.error('❌ Error fetching models:', error);
+      
+      // Создаем новый чат с моделью по умолчанию если запрос не удался
+      createNewChatWithModel('sgr_agent');
+    }
+  };
+
+  const createNewChatWithModel = (modelId: string) => {
+    console.log('🎯 Selected model:', modelId);
     const newId = Math.max(...chatHistory.map(item => item.id), 0) + 1;
     const newChat: ChatItem = {
       id: newId,
@@ -113,6 +141,8 @@ function App() {
     };
     setChatHistory([newChat, ...chatHistory]);
     setCurrentChatId(newId);
+    setShowModelButtons(false);
+    console.log('✅ New chat created with model:', modelId, 'Chat ID:', newId);
   };
 
   const selectChat = (chatId: number) => {
@@ -124,6 +154,51 @@ function App() {
     if (currentChatId === chatId) {
       setCurrentChatId(null);
     }
+  };
+
+  const startEditingChat = (chatId: number, event: React.MouseEvent) => {
+    const chat = chatHistory.find(c => c.id === chatId);
+    if (chat) {
+      setEditingChatId(chatId);
+      setNewChatTitle(chat.title);
+      
+      // Получаем координаты кнопки для позиционирования модального окна
+      const rect = event.currentTarget.getBoundingClientRect();
+      const modalWidth = 300; // Ширина модального окна
+      
+      // Позиционируем правый верхний угол модального окна в координатах курсора
+      let modalX = rect.right - modalWidth;
+      let modalY = rect.top;
+      
+      // Проверяем, чтобы модальное окно не выходило за границы экрана
+      if (modalX < 10) {
+        modalX = 10; // Минимальный отступ от левого края
+      }
+      if (modalY < 10) {
+        modalY = 10; // Минимальный отступ от верхнего края
+      }
+      
+      // Устанавливаем позицию модального окна через CSS переменные
+      document.documentElement.style.setProperty('--modal-x', `${modalX}px`);
+      document.documentElement.style.setProperty('--modal-y', `${modalY}px`);
+    }
+  };
+
+  const saveChatTitle = () => {
+    if (editingChatId && newChatTitle.trim()) {
+      setChatHistory(chatHistory.map(chat => 
+        chat.id === editingChatId 
+          ? { ...chat, title: newChatTitle.trim() }
+          : chat
+      ));
+      setEditingChatId(null);
+      setNewChatTitle('');
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingChatId(null);
+    setNewChatTitle('');
   };
 
   const currentChat = chatHistory.find(chat => chat.id === currentChatId);
@@ -146,7 +221,6 @@ function App() {
     <div className={`app-container ${!sidebarVisible ? 'sidebar-hidden' : ''}`}>
       <TopBar
         setTheme={(theme: string) => applyTheme(theme)}
-        current_theme={current_theme}
         onToggleLanguage={toggleLanguage}
         currentLanguage={current_lng}
         onToggleSidebar={toggleSidebar}
@@ -158,9 +232,19 @@ function App() {
         onAddChat={addNewChat}
         onSelectChat={selectChat}
         onDeleteChat={deleteChat}
+        onEditChat={startEditingChat}
         t={t}
         visible={sidebarVisible}
         searchPlaceholder={t("chat_search")}
+        availableModels={availableModels}
+        showModelButtons={showModelButtons}
+        onCreateChatWithModel={createNewChatWithModel}
+        onHideModelButtons={() => setShowModelButtons(false)}
+        editingChatId={editingChatId}
+        newChatTitle={newChatTitle}
+        onTitleChange={setNewChatTitle}
+        onSaveTitle={saveChatTitle}
+        onCancelEditing={cancelEditing}
       />
       <Chat
         currentChat={currentChat}
@@ -187,6 +271,7 @@ function App() {
         setChatHistory={setChatHistory}
         t={t}
         sidebarVisible={sidebarVisible}
+        currentModel={currentChat?.title?.match(/\(([^)]+)\)$/)?.[1] || 'sgr_agent'}
       />
     </div>
   )

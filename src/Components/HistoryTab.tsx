@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 
 type ChatItem = {
   id: number;
@@ -14,9 +14,19 @@ type HistoryTabProps = {
   onAddChat: () => void;
   onSelectChat: (chatId: number) => void;
   onDeleteChat: (chatId: number) => void;
+  onEditChat: (chatId: number, event: React.MouseEvent) => void;
   t: (key: string) => string;
   visible: boolean;
   searchPlaceholder: string;
+  availableModels: any[];
+  showModelButtons: boolean;
+  onCreateChatWithModel: (modelId: string) => void;
+  onHideModelButtons: () => void;
+  editingChatId: number | null;
+  newChatTitle: string;
+  onTitleChange: (title: string) => void;
+  onSaveTitle: () => void;
+  onCancelEditing: () => void;
 };
 
 const HistoryTab: React.FC<HistoryTabProps> = ({
@@ -25,10 +35,35 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
   onAddChat,
   onSelectChat,
   onDeleteChat,
+  onEditChat,
   t,
   visible,
-  searchPlaceholder
+  searchPlaceholder,
+  availableModels,
+  showModelButtons,
+  onCreateChatWithModel,
+  onHideModelButtons,
+  editingChatId,
+  newChatTitle,
+  onTitleChange,
+  onSaveTitle,
+  onCancelEditing
 }) => {
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Фильтрация чатов по поисковому запросу
+    const filteredChatHistory = useMemo(() => {
+        if (!searchQuery.trim()) {
+            return chatHistory;
+        }
+        
+        const query = searchQuery.toLowerCase().trim();
+        return chatHistory.filter(chat => 
+            chat.title.toLowerCase().includes(query) ||
+            chat.preview.toLowerCase().includes(query)
+        );
+    }, [chatHistory, searchQuery]);
+
     return (
         <div className={`bottom-rect ${!visible ? 'hidden' : ''}`}>
             <div className="history-header">
@@ -44,6 +79,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                         placeholder={searchPlaceholder}
                         aria-label="Chat History Search"
                         aria-describedby="basic-addon1"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
                 <button 
@@ -57,8 +94,39 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                 </button>
             </div>
             
+            {/* Кнопки выбора модели */}
+            {showModelButtons && (
+                <div className="model-selection-section">
+                   <div className="model-selection-header">
+                     <h4>{t('model_selection')}</h4>
+                     <button
+                            className="btn btn-sm btn-outline-secondary model-close-btn"
+                            onClick={onHideModelButtons}
+                            title="Отменить"
+                        >
+                            ×
+                        </button>
+                    </div>
+                    <div className="model-buttons-grid">
+                        {availableModels.map((model) => (
+                            <button
+                                key={model.id}
+                                className="model-button"
+                                onClick={() => {
+                                    console.log('🖱️ Clicked on model:', model.id);
+                                    onCreateChatWithModel(model.id);
+                                }}
+                                title={`${t('create_chat_with_model')} ${model.id}`}
+                            >
+                                <span className="model-button-text">{model.id}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+            
             <div className="history-list">
-                {chatHistory.map((item, index) => (
+                {filteredChatHistory.map((item, index) => (
                     <div 
                         key={item.id} 
                         className={`history-item ${currentChatId === item.id ? 'active' : ''}`} 
@@ -75,6 +143,18 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                             <p className="history-item-preview">{item.preview}</p>
                         </div>
                         <div className="history-item-actions">
+                            <button 
+                                className="btn btn-sm btn-outline-secondary history-action-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditChat(item.id, e);
+                                }}
+                                title="Переименовать чат"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
                             <button 
                                 className="btn btn-sm btn-outline-danger history-action-btn"
                                 onClick={(e) => {
@@ -99,6 +179,67 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                     </svg>
                     <p className="empty-text">{t('empty_history_title')}</p>
                     <p className="empty-subtext">{t('empty_history_subtitle')}</p>
+                </div>
+            )}
+            
+            {chatHistory.length > 0 && filteredChatHistory.length === 0 && searchQuery.trim() && (
+                <div className="empty-search">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" className="empty-icon">
+                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <p className="empty-text">Ничего не найдено</p>
+                    <p className="empty-subtext">Попробуйте изменить поисковый запрос</p>
+                </div>
+            )}
+            
+            {/* Модальное окно для переименования чата */}
+            {editingChatId && (
+                <div className="modal-overlay" onClick={onCancelEditing}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Переименовать чат</h3>
+                            <button 
+                                className="btn-close" 
+                                onClick={onCancelEditing}
+                                title="Закрыть"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <input
+                                    id="chat-title-input"
+                                    type="text"
+                                    className="form-control"
+                                    value={newChatTitle}
+                                    onChange={(e) => onTitleChange(e.target.value)}
+                                    placeholder="Введите новое название"
+                                    autoFocus
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            onSaveTitle();
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={onCancelEditing}
+                            >
+                                Отмена
+                            </button>
+                            <button 
+                                className="btn btn-primary"
+                                onClick={onSaveTitle}
+                                disabled={!newChatTitle.trim()}
+                            >
+                                Сохранить
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

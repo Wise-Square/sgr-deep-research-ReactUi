@@ -22,9 +22,10 @@ type ChatProps = {
   setChatHistory: React.Dispatch<React.SetStateAction<ChatItem[]>>;
   t: (key: string) => string;
   sidebarVisible: boolean;
+  currentModel: string;
 };
 
-const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory, t, sidebarVisible }) => {
+const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory, t, sidebarVisible, currentModel }) => {
     const [inputMessage, setInputMessage] = useState('');
     const [currentAgentId, setCurrentAgentId] = useState<string | null>(null);
     const lastBotMessageIdRef = useRef<number | null>(null);
@@ -388,6 +389,11 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
             <div className={`chat-container ${!sidebarVisible ? 'expanded' : ''}`}>
                 <div className="chat-header">
                     <h2 className="chat-title">{currentChat?.title || t('select_chat')}</h2>
+                    {currentChat && (
+                        <div className="current-model-info">
+                            <span className="model-name">{currentModel}</span>
+                        </div>
+                    )}
                 </div>
                 
                 <div className="chat-messages">
@@ -433,7 +439,7 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                 <div className="input-group modern-chat-input">
                     <input
                         type="text"
-                        className="form-control chat-input"
+                        className={`form-control chat-input ${!currentChat ? 'disabled' : ''}`}
                         placeholder={
                             currentChat 
                                 ? t('enter_message') 
@@ -443,11 +449,13 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
+                        disabled={!currentChat}
                     />
                     <button
-                        className="btn btn-primary send-button"
+                        className={`btn btn-primary send-button ${!currentChat ? 'disabled' : ''}`}
                         type="button"
                         onClick={sendMessage}
+                        disabled={!currentChat}
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>

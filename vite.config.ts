@@ -45,6 +45,19 @@ export default defineConfig({
           });
           
         }
+      },
+      '/v1': {
+        target: 'http://localhost:8010',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy: any) => {
+          proxy.on('proxyRes', (proxyRes: any) => {
+            // CORS заголовки для /v1
+            proxyRes.headers['access-control-allow-origin'] = '*';
+            proxyRes.headers['access-control-allow-methods'] = 'GET, POST, OPTIONS, PUT, DELETE';
+            proxyRes.headers['access-control-allow-headers'] = 'Content-Type, Authorization, Accept, Cache-Control';
+          });
+        }
       }
     }
   }
