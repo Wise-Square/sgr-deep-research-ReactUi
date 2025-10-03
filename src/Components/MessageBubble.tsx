@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LoadingDots from './LoadingDots';
 
 type MessageBubbleProps = {
   message: string;
@@ -7,6 +8,7 @@ type MessageBubbleProps = {
   className?: string;
   spoilerText?: string;
   spoilerTitle?: string;
+  t?: (key: string) => string;
 };
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ 
@@ -15,17 +17,23 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   type, 
   className = '',
   spoilerText,
-  spoilerTitle = 'Детали'
+  spoilerTitle,
+  t
 }) => {
+  // Используем перевод для заголовка спойлера, если функция перевода доступна
+  const defaultSpoilerTitle = t ? t('thoughts') : 'Мысли';
+  const finalSpoilerTitle = spoilerTitle || defaultSpoilerTitle;
   const [isSpoilerOpen, setIsSpoilerOpen] = useState(false);
 
   const renderContent = () => {
+    // Если основной текст пустой, показываем точки загрузки
+    const isEmptyMessage = !message || message.trim() === '';
+    
     if (!spoilerText) {
       return (
-        <div 
-          className="message-bubble-text" 
-          dangerouslySetInnerHTML={{ __html: message }}
-        />
+        <div className="message-bubble-text">
+          {isEmptyMessage ? <LoadingDots /> : <div dangerouslySetInnerHTML={{ __html: message }} />}
+        </div>
       );
     }
 
@@ -37,7 +45,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             onToggle={(e) => setIsSpoilerOpen((e.target as HTMLDetailsElement).open)}
           >
             <summary className="message-bubble-spoiler-summary">
-              {spoilerTitle}
+              {finalSpoilerTitle}
             </summary>
             <div className="message-bubble-spoiler-content">
               <div 
@@ -47,10 +55,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             </div>
           </details>
         </div>
-        <div 
-          className="message-bubble-text" 
-          dangerouslySetInnerHTML={{ __html: message }}
-        />
+        <div className="message-bubble-text">
+          {isEmptyMessage ? <LoadingDots /> : <div dangerouslySetInnerHTML={{ __html: message }} />}
+        </div>
       </div>
     );
   };

@@ -33,6 +33,22 @@ const translates: Translates = {
     like: "Like",
     enter_message: "Enter your message...",
     select_chat_or_create: "Select a chat or create a new one...",
+    thoughts: "Thoughts",
+    
+    // Tooltips
+    hide_history_panel: "Hide history panel",
+    show_history_panel: "Show history panel",
+    switch_to_russian: "Switch to Russian",
+    switch_to_english: "Switch to English",
+    light_theme: "Light theme",
+    dark_theme: "Dark theme",
+    cancel: "Cancel",
+    rename_chat: "Rename chat",
+    close: "Close",
+    rename_chat_title: "Rename chat",
+    enter_new_name: "Enter new name",
+    cancel_btn: "Cancel",
+    save_btn: "Save",
     
     // Time
     just_now: "Just now",
@@ -66,6 +82,22 @@ const translates: Translates = {
     like: "Нравится",
     enter_message: "Введите ваше сообщение...",
     select_chat_or_create: "Выберите чат или создайте новый...",
+    thoughts: "Мысли",
+    
+    // Tooltips
+    hide_history_panel: "Скрыть панель истории",
+    show_history_panel: "Показать панель истории",
+    switch_to_russian: "Переключить на русский",
+    switch_to_english: "Переключить на английский",
+    light_theme: "Светлая тема",
+    dark_theme: "Темная тема",
+    cancel: "Отменить",
+    rename_chat: "Переименовать чат",
+    close: "Закрыть",
+    rename_chat_title: "Переименовать чат",
+    enter_new_name: "Введите новое название",
+    cancel_btn: "Отмена",
+    save_btn: "Сохранить",
     
     // Time
     just_now: "Только что",
@@ -107,7 +139,6 @@ function App() {
 
   const addNewChat = async () => {
     try {
-      console.log('🔄 Fetching models from server...');
       const response = await fetch('/v1/models');
       
       if (!response.ok) {
@@ -115,7 +146,6 @@ function App() {
       }
       
       const models = await response.json();
-      console.log('📋 Available models:', models);
       
       // Сохраняем модели и показываем кнопки выбора
       setAvailableModels(models.data || []);
@@ -130,19 +160,23 @@ function App() {
   };
 
   const createNewChatWithModel = (modelId: string) => {
-    console.log('🎯 Selected model:', modelId);
+    // modelId используется для создания чата с определенной моделью
+    // В будущем можно добавить сохранение модели в объект чата
     const newId = Math.max(...chatHistory.map(item => item.id), 0) + 1;
+    const currentTime = new Date().toLocaleTimeString(current_lng === 'ru' ? 'ru-RU' : 'en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
     const newChat: ChatItem = {
       id: newId,
       title: `${t('new_chat')} ${newId}`,
-      timestamp: t('just_now'),
+      timestamp: currentTime,
       preview: t('start_new_conversation'),
       messages: []
     };
     setChatHistory([newChat, ...chatHistory]);
     setCurrentChatId(newId);
     setShowModelButtons(false);
-    console.log('✅ New chat created with model:', modelId, 'Chat ID:', newId);
   };
 
   const selectChat = (chatId: number) => {
@@ -225,6 +259,7 @@ function App() {
         currentLanguage={current_lng}
         onToggleSidebar={toggleSidebar}
         sidebarVisible={sidebarVisible}
+        t={t}
       />
       <HistoryTab
         chatHistory={chatHistory}
@@ -254,7 +289,7 @@ function App() {
               id: currentChat.messages.length + 1,
               type: 'question' as const,
               content: message,
-              timestamp: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+              timestamp: new Date().toLocaleTimeString(current_lng === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })
             };
             
             setChatHistory(chatHistory.map(chat => 
@@ -272,6 +307,7 @@ function App() {
         t={t}
         sidebarVisible={sidebarVisible}
         currentModel={currentChat?.title?.match(/\(([^)]+)\)$/)?.[1] || 'sgr_agent'}
+        currentLanguage={current_lng}
       />
     </div>
   )

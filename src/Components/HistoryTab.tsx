@@ -102,7 +102,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                      <button
                             className="btn btn-sm btn-outline-secondary model-close-btn"
                             onClick={onHideModelButtons}
-                            title="Отменить"
+                            title={t('cancel')}
                         >
                             ×
                         </button>
@@ -113,7 +113,6 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                                 key={model.id}
                                 className="model-button"
                                 onClick={() => {
-                                    console.log('🖱️ Clicked on model:', model.id);
                                     onCreateChatWithModel(model.id);
                                 }}
                                 title={`${t('create_chat_with_model')} ${model.id}`}
@@ -149,7 +148,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                                     e.stopPropagation();
                                     onEditChat(item.id, e);
                                 }}
-                                title="Переименовать чат"
+                                title={t('rename_chat')}
                             >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
@@ -197,11 +196,11 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                 <div className="modal-overlay" onClick={onCancelEditing}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>Переименовать чат</h3>
+                            <h3>{t('rename_chat_title')}</h3>
                             <button 
                                 className="btn-close" 
                                 onClick={onCancelEditing}
-                                title="Закрыть"
+                                title={t('close')}
                             >
                                 ✕
                             </button>
@@ -214,7 +213,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                                     className="form-control"
                                     value={newChatTitle}
                                     onChange={(e) => onTitleChange(e.target.value)}
-                                    placeholder="Введите новое название"
+                                    placeholder={t('enter_new_name')}
                                     autoFocus
                                     onKeyPress={(e) => {
                                         if (e.key === 'Enter') {
@@ -229,14 +228,14 @@ const HistoryTab: React.FC<HistoryTabProps> = ({
                                 className="btn btn-secondary"
                                 onClick={onCancelEditing}
                             >
-                                Отмена
+{t('cancel_btn')}
                             </button>
                             <button 
                                 className="btn btn-primary"
                                 onClick={onSaveTitle}
                                 disabled={!newChatTitle.trim()}
                             >
-                                Сохранить
+{t('save_btn')}
                             </button>
                         </div>
                     </div>

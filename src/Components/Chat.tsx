@@ -2,6 +2,85 @@ import React, { useState, useEffect, useRef } from 'react';
 import MessageBubble from './MessageBubble';
 import { parseMessage } from '../utils/newParser';
 
+// Импортируем formatJSONForSpoiler из newParser
+const formatJSONForSpoiler = (jsonData: any): string => {
+  let result = '';
+  
+  // Reasoning steps
+  if (jsonData.reasoning_steps) {
+    result += '**Reasoning steps:**\n';
+    jsonData.reasoning_steps.forEach((step: string, index: number) => {
+      result += `${index + 1}. ${step}\n`;
+    });
+    result += '\n';
+  }
+  
+  // Current situation
+  if (jsonData.current_situation) {
+    result += `**Current situation:** ${jsonData.current_situation}\n\n`;
+  }
+  
+  // Plan status
+  if (jsonData.plan_status) {
+    result += `**Plan status:** ${jsonData.plan_status}\n\n`;
+  }
+  
+  // Remaining steps
+  if (jsonData.remaining_steps) {
+    result += '**Remaining steps:**\n';
+    jsonData.remaining_steps.forEach((step: string, index: number) => {
+      result += `${index + 1}. ${step}\n`;
+    });
+    result += '\n';
+  }
+  
+  // Task completed
+  if (jsonData.task_completed !== undefined) {
+    result += `**Task completed:** ${jsonData.task_completed}\n\n`;
+  }
+  
+  // Enough data
+  if (jsonData.enough_data !== undefined) {
+    result += `**Enough data:** ${jsonData.enough_data}\n\n`;
+  }
+  
+  // Function/Tool calls
+  if (jsonData.function) {
+    result += '**Function:**\n';
+    if (jsonData.function.tool_name_discriminator) {
+      result += `- Tool: ${jsonData.function.tool_name_discriminator}\n`;
+    }
+    if (jsonData.function.reasoning) {
+      result += `- Reasoning: ${jsonData.function.reasoning}\n`;
+    }
+    // НЕ добавляем questions в спойлер - они идут в основной текст
+    if (jsonData.function.unclear_terms) {
+      result += `- Unclear terms: ${jsonData.function.unclear_terms.join(', ')}\n`;
+    }
+    if (jsonData.function.assumptions) {
+      result += `- Assumptions: ${jsonData.function.assumptions.join(', ')}\n`;
+    }
+    
+    // Специальная обработка для agentcompletiontool
+    if (jsonData.function.tool_name_discriminator === 'agentcompletiontool') {
+      if (jsonData.function.completed_steps) {
+        result += '**Completed steps:**\n';
+        jsonData.function.completed_steps.forEach((step: string, index: number) => {
+          result += `${index + 1}. ${step}\n`;
+        });
+        result += '\n';
+      }
+      if (jsonData.function.status) {
+        result += `- Status: ${jsonData.function.status}\n`;
+      }
+    }
+    
+    result += '\n';
+  }
+  
+  return result.trim();
+};
+
 type ChatItem = {
   id: number;
   title: string;
@@ -12,7 +91,11 @@ type ChatItem = {
     type: 'question' | 'answer', 
     content: string, 
     timestamp: string,
-    questions?: string
+    questions?: string,
+    // Новые поля для структурированного контента
+    mainText?: string,
+    spoilerText?: string,
+    spoilerTitle?: string
   }>;
 };
 
@@ -23,9 +106,10 @@ type ChatProps = {
   t: (key: string) => string;
   sidebarVisible: boolean;
   currentModel: string;
+  currentLanguage: string;
 };
 
-const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory, t, sidebarVisible, currentModel }) => {
+const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory, t, sidebarVisible, currentModel, currentLanguage }) => {
     const [inputMessage, setInputMessage] = useState('');
     const [currentAgentId, setCurrentAgentId] = useState<string | null>(null);
     const lastBotMessageIdRef = useRef<number | null>(null);
@@ -36,7 +120,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
         setCurrentAgentId(null);
         lastBotMessageIdRef.current = null;
         savedReportContentRef.current = '';
-        console.log('🔄 Chat changed, reset agent state');
     }, [currentChat?.id]);
 
     const sendMessage = async () => {
@@ -50,7 +133,7 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                 id: Date.now(),
                 type: 'question' as const,
                 content: messageToSend,
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: new Date().toLocaleTimeString(currentLanguage === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })
             };
             
             // Обновляем состояние чата
@@ -67,7 +150,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
             
             const botMessageId = Date.now() + 1;
             lastBotMessageIdRef.current = botMessageId;
-            console.log('🆔 Created bot message ID:', botMessageId);
             await getMessage(botMessageId, messageToSend);
             
         } catch (error) {
@@ -80,7 +162,7 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
             id: botMessageId,
             type: 'answer' as const,
             content: '',
-            timestamp: new Date().toLocaleTimeString()
+            timestamp: new Date().toLocaleTimeString(currentLanguage === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })
         };
 
         setChatHistory(prev => {
@@ -90,7 +172,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                 return prev;
             }
             
-            console.log(`🤖 Adding bot message to chat with ${currentChatInState.messages.length} existing messages`);
             
             return prev.map(chat => 
                 chat.id === currentChat?.id 
@@ -100,7 +181,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
         });
 
         const modelToUse = currentAgentId || 'sgr_agent';
-        console.log('🚀 Sending request with model:', modelToUse, 'botMessageId:', botMessageId);
         
         const request = await fetch('/api/v1/chat/completions', {
             method: 'POST',
@@ -116,12 +196,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
             })
         });
         
-        console.log('📡 API Response received:', {
-            status: request.status,
-            statusText: request.statusText,
-            hasBody: !!request.body,
-            botMessageId
-        });
 
         if (!request.ok) {
             console.error('❌ API Request failed:', { status: request.status, statusText: request.statusText, botMessageId });
@@ -131,7 +205,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
         const reader = request.body?.getReader();
         const decoder = new TextDecoder();
         let fullResponse = '';
-        let lastSnapshotContent = '';
 
         if (reader) {
             try {
@@ -147,14 +220,12 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                             const data = line.slice(6);
                             if (data === '[DONE]') break;
                             
-                            console.log('🔍 Raw SSE data received:', data);
                             
                             try {
                                 const parsed = JSON.parse(data);
                             
                                 // Устанавливаем currentAgentId из ответа сервера
                                 if (parsed.model && parsed.model.startsWith('sgr_agent_')) {
-                                    console.log('🆔 Agent ID received:', parsed.model);
                                     setCurrentAgentId(parsed.model);
                                 }
                                 
@@ -162,7 +233,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                 let snapshotContent = '';
                                 if (parsed.snapshot?.choices?.[0]?.message?.content) {
                                     snapshotContent = parsed.snapshot.choices[0].message.content;
-                                    lastSnapshotContent = snapshotContent;
                                 }
 
                                 // Обрабатываем delta content если есть
@@ -173,26 +243,72 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
 
                                 // Всегда пытаемся парсить snapshot если он есть
                                 if (snapshotContent) {
-                                    const parseResult = parseMessage(snapshotContent);
-                                    let contentToShow = '';
+                                    // Парсим JSON напрямую
+                                    let mainTextToShow = '';
+                                    let spoilerText = '';
+                                    let spoilerTitle = undefined; // Заголовок будет установлен в MessageBubble
                                     
-                                    // Проверяем, есть ли Executive Summary в основном тексте
-                                    if (parseResult.mainText.includes('### Executive Summary')) {
-                                        savedReportContentRef.current = parseResult.mainText;
+                                    try {
+                                        const jsonData = JSON.parse(snapshotContent);
+                                        
+                                        // Извлекаем основной текст из JSON
+                                        const mainContentParts = [];
+                                        
+                                        // Добавляем function.title если есть
+                                        if (jsonData.function?.title) {
+                                            mainContentParts.push(`# ${jsonData.function.title}`);
+                                        }
+                                        
+                                        // Добавляем function.content если есть (это сам отчет)
+                                        if (jsonData.function?.content) {
+                                            mainContentParts.push(jsonData.function.content);
+                                        }
+                                        
+                                        // Добавляем function.questions если есть (в основной текст)
+                                        if (jsonData.function?.questions && Array.isArray(jsonData.function.questions)) {
+                                            const questionsText = jsonData.function.questions.map((q: string, index: number) => 
+                                                `${index + 1}. ${q}`
+                                            ).join('\n');
+                                            mainContentParts.push(questionsText);
+                                        }
+                                        
+                                        // Специальная обработка для agentcompletiontool
+                                        if (jsonData.function?.tool_name_discriminator === 'agentcompletiontool') {
+                                            if (!jsonData.function?.title && jsonData.current_situation) {
+                                                mainContentParts.push(`# ${jsonData.current_situation}`);
+                                            }
+                                            if (!jsonData.function?.content && jsonData.function?.reasoning) {
+                                                mainContentParts.push(jsonData.function.reasoning);
+                                            }
+                                        }
+                                        
+                                        if (mainContentParts.length > 0) {
+                                            mainTextToShow = mainContentParts.join('\n\n');
+                                        }
+                                        
+                                        // Проверяем, есть ли Executive Summary
+                                        if (mainTextToShow.includes('### Executive Summary')) {
+                                            savedReportContentRef.current = mainTextToShow;
+                                        }
+                                        
+                                        // Используем сохраненный Executive Summary, если есть
+                                        if (savedReportContentRef.current) {
+                                            mainTextToShow = savedReportContentRef.current;
+                                        }
+                                        
+                                        // Создаем спойлер из JSON данных
+                                        spoilerText = formatJSONForSpoiler(jsonData);
+                                        
+                                    } catch (e) {
+                                        // Если не JSON, используем старую логику
+                                        const parseResult = parseMessage(snapshotContent);
+                                        mainTextToShow = parseResult.mainText;
+                                        spoilerText = parseResult.spoilerText || '';
+                                        spoilerTitle = parseResult.spoilerTitle;
                                     }
                                     
-                                    // Если есть сохраненный контент с Executive Summary, используем его
-                                    if (savedReportContentRef.current && !parseResult.mainText.includes('### Executive Summary')) {
-                                        contentToShow = savedReportContentRef.current;
-                                    } else {
-                                        contentToShow = parseResult.mainText;
-                                    }
-                                    
-                                    if (parseResult.spoilerText) {
-                                        contentToShow = `~~{${parseResult.spoilerTitle || 'Мысли'}}~~\n${parseResult.spoilerText}\n\n${contentToShow}`;
-                                    }
-                                    
-                                    if (contentToShow && contentToShow.length > 0) {
+                                    // Обновляем сообщение со структурированными данными
+                                    if (mainTextToShow || spoilerText) {
                                         setChatHistory(prev => {
                                             const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
                                             if (!currentChatInState) {
@@ -208,15 +324,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                                 return prev;
                                             }
                                             
-                                            console.log('📝 Updating last answer message', targetMessage.id, 'with', contentToShow.length, 'chars');
-                                            console.log('🔄 Content change details:', {
-                                                messageId: targetMessage.id,
-                                                oldContentLength: targetMessage.content.length,
-                                                newContentLength: contentToShow.length,
-                                                oldContentPreview: targetMessage.content.substring(0, 100),
-                                                newContentPreview: contentToShow.substring(0, 100),
-                                                botMessageId: botMessageId
-                                            });
                                             
                                             return prev.map(chat => 
                                                 chat.id === currentChat?.id 
@@ -224,7 +331,14 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                                         ...chat, 
                                                         messages: chat.messages.map(msg => 
                                                             msg.id === targetMessage.id 
-                                                                ? { ...msg, content: contentToShow }
+                                                                ? { 
+                                                                    ...msg, 
+                                                                    mainText: mainTextToShow,
+                                                                    spoilerText: spoilerText,
+                                                                    spoilerTitle: spoilerTitle,
+                                                                    // Обновляем время при появлении контента
+                                                                    timestamp: new Date().toLocaleTimeString(currentLanguage === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+                                                                }
                                                                 : msg
                                                         )
                                                     }
@@ -237,16 +351,12 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                 // Обработка tool_calls
                                 if (parsed.choices?.[0]?.delta?.tool_calls) {
                                     const toolCall = parsed.choices[0].delta.tool_calls[0];
-                                    console.log('🔧 Tool call received:', toolCall?.function?.name);
                                     
                                     if (toolCall?.function?.name === 'createreporttool') {
                                         // НЕ создаем отдельное сообщение для отчетов - парсер сам обработает их
-                                        console.log('📋 Report tool call received, will be handled by parser');
                                     } else if (toolCall?.function?.name === 'agentcompletiontool') {
                                         try {
-                                            const args = JSON.parse(toolCall.function.arguments);
-                                            const completionReasoning = args.reasoning || '';
-                                            console.log('✅ Task completion received (streaming):', completionReasoning);
+                                            JSON.parse(toolCall.function.arguments);
                                         } catch (error) {
                                             console.error('❌ Error parsing completion data:', error);
                                         }
@@ -259,7 +369,6 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                     
                                     if (!fullResponse.trim()) {
                                         fullResponse = finalContent;
-                                        console.log(`🏁 Using final content: ${fullResponse.length} chars`);
                                         setChatHistory(prev => {
                                             const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
                                             if (!currentChatInState) {
@@ -281,7 +390,12 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                                         ...chat, 
                                                         messages: chat.messages.map(msg => 
                                                             msg.id === targetMessage.id 
-                                                                ? { ...msg, content: fullResponse }
+                                                                ? { 
+                                                                    ...msg, 
+                                                                    content: fullResponse,
+                                                                    // Обновляем время при появлении финального контента
+                                                                    timestamp: new Date().toLocaleTimeString(currentLanguage === 'ru' ? 'ru-RU' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+                                                                }
                                                                 : msg
                                                         )
                                                     }
@@ -299,79 +413,7 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
             } catch (error) {
                 console.error('❌ Error during stream processing:', error);
             } finally {
-                // Финальная обработка JSON после завершения стрима
-                let finalContentForParsing = fullResponse;
-                
-                // Для createreporttool всегда используем lastSnapshotContent (JSON), а не fullResponse (результаты поиска)
-                if (lastSnapshotContent && lastSnapshotContent.startsWith('{')) {
-                    finalContentForParsing = lastSnapshotContent;
-                } else if (lastSnapshotContent && lastSnapshotContent.length > fullResponse.length) {
-                    finalContentForParsing = lastSnapshotContent;
-                }
-                
-                // Парсер сам извлекает questions из JSON
-                const finalParseResult = parseMessage(finalContentForParsing);
-                
-                // Проверяем, есть ли Executive Summary в финальном результате
-                if (finalParseResult.mainText.includes('### Executive Summary')) {
-                    savedReportContentRef.current = finalParseResult.mainText;
-                }
-                
-                // Если есть сохраненный контент с Executive Summary, используем его
-                let finalMainText = finalParseResult.mainText;
-                if (savedReportContentRef.current && !finalParseResult.mainText.includes('### Executive Summary')) {
-                    finalMainText = savedReportContentRef.current;
-                }
-                
-                if (finalParseResult.spoilerText) {
-                    const finalFormattedContent = `~~{${finalParseResult.spoilerTitle || 'Мысли'}}~~\n${finalParseResult.spoilerText}\n\n${finalMainText}`;
-                    
-                    setChatHistory(prev => {
-                        const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
-                        if (!currentChatInState) return prev;
-                        
-                        const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
-                        const targetMessage = answerMessages[answerMessages.length - 1];
-                        
-                        if (!targetMessage) return prev;
-                        
-                        return prev.map(chat => 
-                            chat.id === currentChat?.id 
-                                ? {
-                                    ...chat, 
-                                    messages: chat.messages.map(msg => 
-                                        msg.id === targetMessage.id 
-                                            ? { ...msg, content: finalFormattedContent }
-                                            : msg
-                                    )
-                                }
-                                : chat
-                        );
-                    });
-                } else {
-                    setChatHistory(prev => {
-                        const currentChatInState = prev.find(chat => chat.id === currentChat?.id);
-                        if (!currentChatInState) return prev;
-                        
-                        const answerMessages = currentChatInState.messages.filter(msg => msg.type === 'answer');
-                        const targetMessage = answerMessages[answerMessages.length - 1];
-                        
-                        if (!targetMessage) return prev;
-                        
-                        return prev.map(chat => 
-                            chat.id === currentChat?.id 
-                                ? {
-                                    ...chat, 
-                                    messages: chat.messages.map(msg => 
-                                        msg.id === targetMessage.id 
-                                            ? { ...msg, content: finalMainText }
-                                            : msg
-                                    )
-                                }
-                                : chat
-                        );
-                    });
-                }
+                // Финальная обработка - убеждаемся, что структурированные данные сохранены
             }
         }
         
@@ -415,6 +457,21 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                     ) : (
                         <>
                             {currentChat?.messages.map((message) => {
+                                // Используем структурированные данные, если они есть
+                                if (message.type === 'answer' && (message.mainText || message.spoilerText)) {
+                                    return (
+                                        <MessageBubble
+                                            key={message.id}
+                                            message={message.mainText || message.content}
+                                            timestamp={message.timestamp}
+                                            type="assistant"
+                                            spoilerText={message.spoilerText}
+                                            spoilerTitle={message.spoilerTitle}
+                                            t={t}
+                                        />
+                                    );
+                                } else {
+                                    // Обычное сообщение или ответ без структурированных данных
                                 const { mainText, spoilerText, spoilerTitle } = message.type === 'answer' 
                                     ? parseMessage(message.content, message.questions)
                                     : { mainText: message.content, spoilerText: undefined, spoilerTitle: undefined };
@@ -427,8 +484,10 @@ const Chat: React.FC<ChatProps> = ({ currentChat, onSendMessage, setChatHistory,
                                         type={message.type === 'question' ? 'user' : 'assistant'}
                                         spoilerText={spoilerText}
                                         spoilerTitle={spoilerTitle}
+                                            t={t}
                                     />
                                 );
+                                }
                             })}
                         </>
                     )}

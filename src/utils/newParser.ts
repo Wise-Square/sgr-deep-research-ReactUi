@@ -17,66 +17,24 @@ export function parseMessage(messageContent: string, questions?: string): ParseR
   // Если контент пустой
   if (!messageContent.trim()) {
     return {
-      mainText: questions || "Обрабатываю запрос...",
+      mainText: questions || "",
       spoilerText: undefined,
       spoilerTitle: undefined
     };
   }
   
   // Если контент уже содержит отформатированный спойлер
-  const spoilerMatch = messageContent.match(/^~~\{([^}]+)\}~~\n(.*)$/s);
+  const spoilerMatch = messageContent.match(/^~~\{([^}]+)\}~~\n(.*?)(?:\n\n(.*))?$/s);
   if (spoilerMatch) {
+    const spoilerTitle = spoilerMatch[1];
+    const spoilerText = spoilerMatch[2];
+    const mainText = spoilerMatch[3] || '';
     
-    // Ищем title в function
-    const titleMatch = messageContent.match(/- Title: ([^-\n]+)/);
-    let mainText = '';
-    
-    if (titleMatch) {
-      mainText = `# ${titleMatch[1].trim()}`;
-    }
-    
-    // Ищем content в function
-    const contentMatch = messageContent.match(/- Content: ([^-\n]+(?:[^-\n]*\n[^-\n]+)*)/);
-    if (contentMatch) {
-      const content = contentMatch[1].trim();
-      if (mainText) {
-        mainText += '\n\n' + content;
-      } else {
-        mainText = content;
-      }
-    }
-    
-    // Если нет title/content, ищем questions
-    if (!mainText) {
-      const questionsMatch = messageContent.match(/- Questions: ([^-\n]+(?:[^-\n]*\n[^-\n]+)*)/);
-      
-      if (questionsMatch) {
-        // Извлекаем questions и форматируем их
-        const questionsText = questionsMatch[1].trim();
-        const questionsArray = questionsText.split(',').map(q => q.trim());
-        mainText = questionsArray.join('\n');
-      }
-    }
-    
-    // Если questions не найдены, ищем их в конце контента
-    if (!mainText) {
-      const endMatch = messageContent.match(/\n\n([A-Za-z].*)$/s);
-      if (endMatch) {
-        mainText = endMatch[1];
-      }
-    }
-    
-    // Убираем questions из спойлера, если они есть
-    let spoilerText = spoilerMatch[2];
-    if (mainText) {
-      // Убираем questions из конца спойлера
-      spoilerText = spoilerText.replace(/\n\nWhat specific information.*$/s, '');
-    }
     
     return {
-      mainText: mainText,
-      spoilerText: spoilerText,
-      spoilerTitle: spoilerMatch[1]
+      mainText: mainText.trim(),
+      spoilerText: spoilerText.trim(),
+      spoilerTitle: spoilerTitle
     };
   }
   
@@ -125,7 +83,7 @@ export function parseMessage(messageContent: string, questions?: string): ParseR
   }
   
   // Извлекаем определенные поля для основного текста
-  let mainText = "Обрабатываю запрос...";
+  let mainText = "";
   
   if (messageContent.startsWith('{')) {
     try {
@@ -137,11 +95,13 @@ export function parseMessage(messageContent: string, questions?: string): ParseR
         mainContentParts.push(questions.trim());
       }
       
-      // Добавляем function.questions если есть (из JSON)
-      if (jsonData.function?.questions) {
-        const functionQuestions = jsonData.function.questions.join('\n');
-        if (functionQuestions.trim()) {
-          mainContentParts.push(functionQuestions.trim());
+      // Добавляем function.questions если есть (из JSON) - в основной текст
+      if (jsonData.function?.questions && Array.isArray(jsonData.function.questions)) {
+        const questionsText = jsonData.function.questions.map((q: string, index: number) => 
+          `${index + 1}. ${q}`
+        ).join('\n');
+        if (questionsText.trim()) {
+          mainContentParts.push(questionsText.trim());
         }
       }
       
@@ -188,24 +148,32 @@ export function parseMessage(messageContent: string, questions?: string): ParseR
       if (mainContentParts.length > 0) {
         mainText = mainContentParts.join('\n\n');
         if (mainText.includes('### Executive Summary')) {
-          console.log('🔍 Executive Summary found in mainText:', mainText.substring(0, 200));
+        }
+      }
+      
+      // Дополнительная проверка: если в JSON есть content с Executive Summary, но он не попал в mainText
+      if (!mainText.includes('### Executive Summary') && jsonData.function?.content?.includes('### Executive Summary')) {
+        if (mainText && mainText !== "Обрабатываю запрос...") {
+          mainText += '\n\n' + jsonData.function.content;
+        } else {
+          mainText = jsonData.function.content;
         }
       }
       
       
     } catch (e) {
-      // Если не удалось распарсить JSON, используем questions или дефолтный текст
-      mainText = questions && questions.trim() ? questions.trim() : "Обрабатываю запрос...";
+      // Если не удалось распарсить JSON, используем questions или пустой текст
+      mainText = questions && questions.trim() ? questions.trim() : "";
     }
   } else {
-    // Если не JSON, используем questions или дефолтный текст
-    mainText = questions && questions.trim() ? questions.trim() : "Обрабатываю запрос...";
+    // Если не JSON, используем questions или пустой текст
+    mainText = questions && questions.trim() ? questions.trim() : "";
   }
   
   return {
     mainText: mainText,
     spoilerText: spoilerContent,
-    spoilerTitle: "Мысли"
+    spoilerTitle: undefined // Заголовок будет установлен в MessageBubble с учетом языка
   };
 }
 
@@ -324,9 +292,7 @@ function formatJSONForSpoiler(jsonData: any): string {
     if (jsonData.function.reasoning) {
       result += `- Reasoning: ${jsonData.function.reasoning}\n`;
     }
-    if (jsonData.function.questions) {
-      result += `- Questions: ${jsonData.function.questions.join(', ')}\n`;
-    }
+    // НЕ добавляем questions в спойлер - они идут в основной текст
     if (jsonData.function.unclear_terms) {
       result += `- Unclear terms: ${jsonData.function.unclear_terms.join(', ')}\n`;
     }
